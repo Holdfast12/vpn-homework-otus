@@ -1,0 +1,91 @@
+- name: install easy-rsa
+  ansible.builtin.dnf:
+    name:
+    - easy-rsa
+    state: latest
+    install_weak_deps: false
+
+- name: init-pki
+  ansible.builtin.shell:
+    cmd: /usr/share/easy-rsa/3.0.8/easyrsa init-pki
+    chdir: /etc/openvpn/
+
+- name: build-ca
+  ansible.builtin.shell:
+    cmd: echo 'rasvpn' | /usr/share/easy-rsa/3.0.8/easyrsa build-ca nopass
+    chdir: /etc/openvpn/
+
+- name: gen-req server
+  ansible.builtin.shell:
+    cmd: echo 'rasvpn' | /usr/share/easy-rsa/3.0.8/easyrsa gen-req server nopass
+    chdir: /etc/openvpn/
+
+- name: sign-req server
+  ansible.builtin.shell:
+    cmd: echo 'yes' | /usr/share/easy-rsa/3.0.8/easyrsa sign-req server server
+    chdir: /etc/openvpn/
+
+- name: easyrsa gen-dh
+  ansible.builtin.shell:
+    cmd: /usr/share/easy-rsa/3.0.8/easyrsa gen-dh
+    chdir: /etc/openvpn/
+
+- name: ca.key
+  ansible.builtin.shell:
+    cmd: openvpn --genkey --secret ca.key
+    chdir: /etc/openvpn/
+
+- name: gen-req client
+  ansible.builtin.shell:
+    cmd: echo 'client' | /usr/share/easy-rsa/3/easyrsa gen-req client nopass
+    chdir: /etc/openvpn/
+
+- name: sign-req client
+  ansible.builtin.shell:
+    cmd: echo 'yes' | /usr/share/easy-rsa/3/easyrsa sign-req client client
+    chdir: /etc/openvpn/
+
+- name: copy client file
+  copy:
+    src: client
+    dest: /etc/openvpn/client/client
+    owner: root
+    group: root
+    mode: 0644
+
+- name: copy server.conf
+  copy:
+    src: server.conf
+    dest: /etc/openvpn/server.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: copy service unit
+  copy:
+    src: openvpn@.service
+    dest: /etc/systemd/system/openvpn@.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: restart and enable service
+  service: 
+    name: openvpn@server
+    state: restarted 
+    enabled: yes
+
+- name: copy crt-key files for client
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /vagrant/ovpn_files_for_host/
+    remote_src: yes
+  with_items:
+    - /etc/openvpn/pki/ca.crt
+    - /etc/openvpn/pki/issued/client.crt
+    - /etc/openvpn/pki/private/client.key
+
+- name: copy client.conf for client
+  ansible.builtin.copy:
+    src: client.conf
+    dest: /vagrant/ovpn_files_for_host/client.conf

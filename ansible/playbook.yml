@@ -12,7 +12,7 @@
   vars_files:
     - defaults/main.yml
   roles:
-    - ovpn_server
+    - ras_ovpn
 
 - hosts: client
   become: true

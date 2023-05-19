@@ -1,0 +1,5 @@
+default via 192.168.7.9 dev enx7e5ef7be5ab5 proto dhcp metric 100 
+169.254.0.0/16 dev enx7e5ef7be5ab5 scope link metric 1000 
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown 
+192.168.7.0/24 dev enx7e5ef7be5ab5 proto kernel scope link src 192.168.7.160 metric 100 
+192.168.56.0/24 dev vboxnet2 proto kernel scope link src 192.168.56.1 
